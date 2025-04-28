@@ -150,3 +150,10 @@ Thumbs.db
 #
 # 3. File .env HARUS di-ignore untuk keamanan!
 # ==============================================
+
+.replit
+uv.lock
+__MACOSX/
+flask_app/
+generated-icon.png
+
