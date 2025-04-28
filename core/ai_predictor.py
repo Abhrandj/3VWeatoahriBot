@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 
-# Prophet di-comment supaya gak error di Railway
+# Prophet di-comment supaya gak error deploy di Railway
 # from prophet import Prophet
 
 def predict_next_close_linear(df):
@@ -27,7 +27,7 @@ def predict_next_close_linear(df):
     next_time = np.array([[len(df)]])
     predicted_close = model.predict(next_time)[0]
 
-    # === Buat dan simpan grafik prediksi ===
+    # Simpan grafik prediksi
     output_path = os.path.join("app", "static", "live_prediction_chart.png")
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
@@ -48,8 +48,10 @@ def predict_next_close_linear(df):
 def predict_next_close_prophet(df):
     """
     Dummy prediction untuk Prophet sementara (Railway tidak support GLIBC 2.38).
+    :param df: DataFrame
+    :return: float
     """
     if len(df) > 0 and 'close' in df.columns:
-        return df['close'].iloc[-1]
+        return df['close'].iloc[-1]  # Return close terakhir
     else:
         return 0
