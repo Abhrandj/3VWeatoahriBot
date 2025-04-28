@@ -62,6 +62,7 @@ db.sqlite3-journal
 # Flask
 instance/
 .webassets-cache
+flask_app/            # <<<<<<< Tambahan, karena folder rusak sebelumnya
 
 # Scrapy
 .scrapy
@@ -74,7 +75,7 @@ docs/_build/
 target/
 
 # Jupyter Notebook
-.ipynb_checkpoints
+.ipynb_checkpoints/
 
 # IPython
 profile_default/
@@ -83,15 +84,10 @@ ipython_config.py
 # pyenv
 # .python-version
 
-# Dependency management (uncomment sesuai kebutuhan)
-# Pipenv
-#Pipfile.lock
-
-# Poetry
-#poetry.lock
-
-# PDM
-#pdm.lock
+# Dependency management
+Pipfile.lock
+poetry.lock
+pdm.lock
 .pdm.toml
 
 # PEP 582
@@ -106,6 +102,7 @@ celerybeat.pid
 
 # Environments
 .env
+.env.*
 .venv
 env/
 venv/
@@ -114,10 +111,11 @@ env.bak/
 venv.bak/
 
 # IDE & Editor
+.idea/
+.vscode/
 .spyderproject
 .spyproject
 .ropeproject
-.idea/
 
 # mkdocs
 /site
@@ -136,25 +134,22 @@ cython_debug/
 .DS_Store
 Thumbs.db
 
-# Docker (opsional)
+# Docker
 # docker-compose.override.yml
 
-# ==============================================
-# Catatan Khusus:
-# 1. Untuk Poetry/Pipenv: Uncomment lock file jika:
-#    - Proyek aplikasi (bukan library)
-#    - Ingin memastikan dependency konsisten
-#
-# 2. Untuk .python-version: Uncomment jika menggunakan pyenv
-#    dan ingin menyimpan versi Python spesifik
-#
-# 3. File .env HARUS di-ignore untuk keamanan!
-# ==============================================
+# Railway
+railway.json.lock
 
+# Replit Specific
 .replit
 uv.lock
-__MACOSX/
-flask_app/
+
+# Temporary / Testing Files
 generated-icon.png
 test_telegram.py
 
+# Backup / Old Backup Folders
+backup_*/
+__MACOSX/
+*.zip
+*.tar.gz

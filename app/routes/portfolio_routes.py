@@ -1,18 +1,18 @@
 import os
 from datetime import datetime
-from flask import Blueprint, render_template, send_from_directory, send_file, redirect, url_for
+from flask import Blueprint, render_template, send_from_directory, send_file, redirect, url_for, session
 
 from core.bot_instance import bot
 from core.utils import generate_roi_chart
 
-# Inisialisasi Blueprint
-portfolio_bp = Blueprint("portfolio_bp", __name__)
+portfolio_bp = Blueprint("portfolio", __name__)
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
-# Base Directory
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'app', 'static'))
-
-@portfolio_bp.route('/', methods=['GET'])
+@portfolio_bp.route("/", methods=["GET"])
 def portfolio():
+    if "user" not in session:
+        return redirect(url_for('auth.login'))
+
     positions = bot.portfolio.get_open_positions()
     table = []
 
@@ -34,27 +34,35 @@ def portfolio():
         })
 
     closed = bot.portfolio.get_closed()
-    return render_template('portfolio.html', positions=table, closed_positions=closed)
+    return render_template("portfolio.html", positions=table, closed_positions=closed)
 
-@portfolio_bp.route('/positions')
+@portfolio_bp.route("/positions")
 def positions():
-    return render_template('positions.html', positions=bot.portfolio.get_open_positions(), bot=bot)
+    if "user" not in session:
+        return redirect(url_for('auth.login'))
+    return render_template("positions.html", positions=bot.portfolio.get_open_positions(), bot=bot)
 
-@portfolio_bp.route('/export_portfolio')
+@portfolio_bp.route("/export_portfolio")
 def export_portfolio():
+    if "user" not in session:
+        return redirect(url_for('auth.login'))
     file_path = bot.portfolio.export_to_csv()
     if file_path:
-        return send_from_directory('static', 'portfolio.csv', as_attachment=True)
+        return send_from_directory("static", "portfolio.csv", as_attachment=True)
     return "Export failed", 500
 
-@portfolio_bp.route('/export_history')
+@portfolio_bp.route("/export_history")
 def export_history():
-    csv_path = os.path.join(BASE_DIR, 'portfolio_history.csv')
+    if "user" not in session:
+        return redirect(url_for('auth.login'))
+    csv_path = os.path.join(BASE_DIR, "..", "static", "portfolio_history.csv")
     filename = bot.portfolio.export_history_to_csv(csv_path)
     return send_file(filename, as_attachment=True)
 
-@portfolio_bp.route('/debug_roi')
+@portfolio_bp.route("/debug_roi")
 def debug_roi():
+    if "user" not in session:
+        return redirect(url_for('auth.login'))
     dummy_position = {
         "symbol": "BTC-USDT",
         "side": "BUY",
@@ -69,4 +77,4 @@ def debug_roi():
         bot.portfolio.closed.append(dummy_position)
 
     generate_roi_chart(bot.portfolio.get_closed())
-    return redirect(url_for('dashboard_bp.dashboard'))
+    return redirect(url_for("dashboard.dashboard"))

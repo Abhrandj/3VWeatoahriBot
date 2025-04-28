@@ -68,7 +68,7 @@
           </p>
 
           <!-- Tombol Open Trade -->
-          <form action="{{ url_for('live_backtest_bp.open_trade') }}" method="POST">
+          <form action="{{ url_for('live_backtest.open_trade') }}" method="POST">
             <input type="hidden" name="pair" value="{{ selected_pair }}">
             <input type="hidden" name="entry" value="{{ prediction.entry }}">
             <input type="hidden" name="sl" value="{{ prediction.sl }}">

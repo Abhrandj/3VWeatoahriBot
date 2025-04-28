@@ -9,3 +9,4 @@ scikit-learn>=1.1
 prophet>=1.1
 pystan>=2.19
 cmdstanpy>=1.0
+bcrypt

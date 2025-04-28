@@ -1,20 +1,20 @@
 import os
-from flask import Blueprint, render_template, request, redirect, url_for, send_from_directory, flash
+from flask import Blueprint, render_template, request, redirect, url_for, send_from_directory, flash, session
 
 from core.bot_instance import bot
 from core.graph_generator import generate_pair_chart
 from core.utils import generate_roi_chart
 from core.report_generator import generate_daily_report
 
-# Inisialisasi Blueprint
-dashboard_bp = Blueprint("dashboard_bp", __name__)
+dashboard_bp = Blueprint("dashboard", __name__)
 
-# Path untuk folder grafik
 GRAPH_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'app', 'static', 'graphs'))
 
-# === Dashboard Utama ===
 @dashboard_bp.route('/', methods=['GET', 'POST'])
 def dashboard():
+    if "user" not in session:
+        return redirect(url_for('auth.login'))
+
     pair_list = ["BTC-USDT", "ETH-USDT", "SOL-USDT"]
 
     if request.method == "POST":
@@ -47,14 +47,16 @@ def dashboard():
 
     return render_template('dashboard.html', signal=signal, pair_list=pair_list, bot=bot, avg_roi=avg_roi)
 
-# === Serve file grafik dari static/graphs ===
 @dashboard_bp.route('/graphs/<path:filename>')
 def graph_file(filename):
+    if "user" not in session:
+        return redirect(url_for('auth.login'))
     return send_from_directory(GRAPH_FOLDER, filename)
 
-# === Kirim Daily Report ke Telegram ===
 @dashboard_bp.route('/send_daily_report', methods=['POST'])
 def send_daily_report():
+    if "user" not in session:
+        return redirect(url_for('auth.login'))
     result = generate_daily_report()
     flash(result)
-    return redirect(url_for('dashboard_bp.dashboard'))
+    return redirect(url_for('dashboard.dashboard'))

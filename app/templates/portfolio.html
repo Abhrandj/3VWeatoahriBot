@@ -7,7 +7,7 @@
   <!-- === OPEN POSITIONS === -->
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h2 class="mb-0">Open Positions</h2>
-    <a href="{{ url_for('portfolio_bp.export_portfolio') }}" class="btn btn-outline-primary">
+    <a href="{{ url_for('portfolio.export_portfolio') }}" class="btn btn-outline-primary">
       <i class="bi bi-download me-1"></i> Export CSV
     </a>
   </div>
@@ -50,7 +50,7 @@
   <div class="card shadow-sm mb-4">
     <div class="card-body text-center">
       <h5 class="card-title">Cumulative ROI Chart</h5>
-      <img src="{{ url_for('dashboard_bp.graph_file', filename='cumulative_roi.png') }}"
+      <img src="{{ url_for('dashboard.graph_file', filename='cumulative_roi.png') }}"
            alt="ROI Chart" class="img-fluid">
     </div>
   </div>
@@ -58,7 +58,7 @@
   <!-- === CLOSED HISTORY === -->
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h2 class="mb-0">Closed Position History</h2>
-    <a href="{{ url_for('portfolio_bp.export_history') }}" class="btn btn-outline-secondary">
+    <a href="{{ url_for('portfolio.export_history') }}" class="btn btn-outline-secondary">
       <i class="bi bi-file-earmark-arrow-down me-1"></i> Export History
     </a>
   </div>

@@ -1,0 +1,52 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="{{ url_for('main.home') }}">
+      <i class="bi bi-cpu me-1"></i> TradingBot
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+
+        <li class="nav-item">
+          <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="{{ url_for('main.home') }}">
+            <i class="bi bi-house-door me-1"></i> Home
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link {% if request.path == '/dashboard' %}active{% endif %}" href="{{ url_for('dashboard_bp.dashboard') }}">
+            <i class="bi bi-speedometer2 me-1"></i> Dashboard
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link {% if request.path == '/portfolio' %}active{% endif %}" href="{{ url_for('portfolio_bp.portfolio') }}">
+            <i class="bi bi-wallet2 me-1"></i> Portfolio
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link {% if request.path == '/positions' %}active{% endif %}" href="{{ url_for('portfolio_bp.positions') }}">
+            <i class="bi bi-bar-chart-steps me-1"></i> Posisi Terbuka
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link {% if request.path == '/backtest' %}active{% endif %}" href="{{ url_for('backtest_bp.backtest') }}">
+            <i class="bi bi-graph-up-arrow me-1"></i> Backtest
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link {% if request.path == '/live_backtest' %}active{% endif %}" href="{{ url_for('live_backtest_bp.live_backtest') }}">
+            <i class="bi bi-lightning-charge-fill me-1"></i> Live Backtest
+          </a>
+        </li>
+
+      </ul>
+    </div>
+  </div>
+</nav>

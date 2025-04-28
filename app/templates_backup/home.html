@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Home - TradingBot{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="text-center">
+    <h1 class="display-4">Welcome to <span class="text-primary">TradingBot</span>!</h1>
+    <p class="lead mt-3">Automated Scalping & Intraday Bot.<br>Real-time signals, backtest strategies, and portfolio monitoring.</p>
+    <hr class="my-4">
+    <a class="btn btn-primary btn-lg" href="{{ url_for('dashboard_bp.dashboard') }}" role="button">
+      <i class="bi bi-speedometer2 me-1"></i> Go to Dashboard
+    </a>
+  </div>
+</div>
+
+{% endblock %}

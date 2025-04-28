@@ -1,17 +1,17 @@
 {% extends "base.html" %}
-
-{% block title %}Home - TradingBot{% endblock %}
+{% block title %}Home{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-  <div class="text-center">
-    <h1 class="display-4">Welcome to <span class="text-primary">TradingBot</span>!</h1>
-    <p class="lead mt-3">Automated Scalping & Intraday Bot.<br>Real-time signals, backtest strategies, and portfolio monitoring.</p>
-    <hr class="my-4">
-    <a class="btn btn-primary btn-lg" href="{{ url_for('dashboard_bp.dashboard') }}" role="button">
+<div class="text-center my-5">
+  <h1 class="mb-4">Welcome, {{ username }}!</h1>
+  <p class="lead">You are successfully logged in to TradingBot system.</p>
+  <div class="d-flex justify-content-center gap-3 mt-4">
+    <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-primary">
       <i class="bi bi-speedometer2 me-1"></i> Go to Dashboard
+    </a>
+    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger">
+      <i class="bi bi-box-arrow-right me-1"></i> Logout
     </a>
   </div>
 </div>
-
 {% endblock %}

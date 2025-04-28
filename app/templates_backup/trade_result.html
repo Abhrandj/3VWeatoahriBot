@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Trade Confirmation{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="card shadow-sm">
+      <div class="card-body text-center">
+        <h3 class="card-title mb-4">
+          <i class="bi bi-check2-circle text-success me-2"></i>Trade Opened Successfully!
+        </h3>
+
+        <ul class="list-group mb-4 text-start">
+          <li class="list-group-item d-flex justify-content-between">
+            <strong>Pair:</strong> <span>{{ pair }}</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between">
+            <strong>Direction:</strong> 
+            <span class="text-{{ 'success' if signal == 'BUY' else 'danger' }}">{{ signal }}</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between">
+            <strong>Entry Price:</strong> <span>${{ entry }}</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between">
+            <strong>Stop Loss:</strong> <span class="text-danger">${{ sl }}</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between">
+            <strong>Take Profit:</strong> <span class="text-success">${{ tp }}</span>
+          </li>
+        </ul>
+
+        <div class="d-flex justify-content-center gap-3">
+          <a href="{{ url_for('live_backtest_bp.live_backtest') }}" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-left me-1"></i> Back to Live
+          </a>
+          <a href="{{ url_for('dashboard_bp.dashboard') }}" class="btn btn-primary">
+            <i class="bi bi-speedometer2 me-1"></i> Go to Dashboard
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

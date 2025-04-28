@@ -2,22 +2,23 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 from datetime import datetime
-from flask import Blueprint, render_template, request, session
+from flask import Blueprint, render_template, request, session, redirect, url_for
 
 from core.bot_instance import bot
 from core.ai_predictor import predict_next_close_linear
 from core.okx_trader import execute_trade
 from core.telegram import send_telegram_message, send_telegram_photo
 
-# Inisialisasi Blueprint
-live_backtest_bp = Blueprint("live_backtest_bp", __name__)
+live_backtest_bp = Blueprint("live_backtest", __name__)
 
-# Path untuk simpan grafik prediksi live
-STATIC_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'app', 'static'))
-GRAPH_PATH = os.path.join(STATIC_FOLDER, 'live_prediction_chart.png')
+STATIC_FOLDER = os.path.join(os.path.dirname(__file__), '..', '..', 'app', 'static')
+GRAPH_PATH = os.path.join(STATIC_FOLDER, "live_prediction_chart.png")
 
-@live_backtest_bp.route('/', methods=['GET', 'POST'])
+@live_backtest_bp.route("/", methods=["GET", "POST"])
 def live_backtest():
+    if "user" not in session:
+        return redirect(url_for('auth.login'))
+
     selected_pair = request.form.get("pair", "BTC-USDT")
     interval = request.form.get("interval", "1m")
     data = bot.engine.get_ohlcv(selected_pair, interval=interval, limit=100)
@@ -56,7 +57,7 @@ def live_backtest():
                 "is_new": is_new_prediction
             }
 
-            # === Buat grafik live prediction ===
+            # === Plot chart ===
             plt.figure(figsize=(10, 4))
             plt.plot(df['datetime'][-30:], df['close'][-30:], label="Actual Price", marker='o')
             plt.axhline(y=entry, color='gray', linestyle='--', label=f"Entry: {entry}")
@@ -72,7 +73,6 @@ def live_backtest():
             plt.savefig(GRAPH_PATH)
             plt.close()
 
-            # === Kirim sinyal baru ke Telegram ===
             if is_new_prediction:
                 signal_msg = (
                     f"[Sinyal Baru Detected]\n"
@@ -95,8 +95,11 @@ def live_backtest():
         current_time=current_time
     )
 
-@live_backtest_bp.route('/open_trade', methods=['POST'])
+@live_backtest_bp.route("/open_trade", methods=["POST"])
 def open_trade():
+    if "user" not in session:
+        return redirect(url_for('auth.login'))
+
     pair = request.form.get("pair")
     entry = request.form.get("entry")
     sl = request.form.get("sl")

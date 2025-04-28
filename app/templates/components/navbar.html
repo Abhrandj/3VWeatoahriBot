@@ -1,6 +1,8 @@
+<!-- templates/components/navbar.html -->
+
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
   <div class="container-fluid">
-    <a class="navbar-brand" href="{{ url_for('main.home') }}">
+    <a class="navbar-brand" href="{{ url_for('home_bp.home') }}">
       <i class="bi bi-cpu me-1"></i> TradingBot
     </a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -11,38 +13,38 @@
       <ul class="navbar-nav ms-auto">
 
         <li class="nav-item">
-          <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="{{ url_for('main.home') }}">
+          <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="{{ url_for('home_bp.home') }}">
             <i class="bi bi-house-door me-1"></i> Home
           </a>
         </li>
 
         <li class="nav-item">
-          <a class="nav-link {% if request.path == '/dashboard' %}active{% endif %}" href="{{ url_for('dashboard_bp.dashboard') }}">
+          <a class="nav-link {% if request.path.startswith('/dashboard') %}active{% endif %}" href="{{ url_for('dashboard.dashboard') }}">
             <i class="bi bi-speedometer2 me-1"></i> Dashboard
           </a>
         </li>
 
         <li class="nav-item">
-          <a class="nav-link {% if request.path == '/portfolio' %}active{% endif %}" href="{{ url_for('portfolio_bp.portfolio') }}">
+          <a class="nav-link {% if request.path.startswith('/portfolio') %}active{% endif %}" href="{{ url_for('portfolio.portfolio') }}">
             <i class="bi bi-wallet2 me-1"></i> Portfolio
           </a>
         </li>
 
         <li class="nav-item">
-          <a class="nav-link {% if request.path == '/positions' %}active{% endif %}" href="{{ url_for('portfolio_bp.positions') }}">
-            <i class="bi bi-bar-chart-steps me-1"></i> Posisi Terbuka
-          </a>
-        </li>
-
-        <li class="nav-item">
-          <a class="nav-link {% if request.path == '/backtest' %}active{% endif %}" href="{{ url_for('backtest_bp.backtest') }}">
+          <a class="nav-link {% if request.path.startswith('/backtest') %}active{% endif %}" href="{{ url_for('backtest.backtest') }}">
             <i class="bi bi-graph-up-arrow me-1"></i> Backtest
           </a>
         </li>
 
         <li class="nav-item">
-          <a class="nav-link {% if request.path == '/live_backtest' %}active{% endif %}" href="{{ url_for('live_backtest_bp.live_backtest') }}">
+          <a class="nav-link {% if request.path.startswith('/live_backtest') %}active{% endif %}" href="{{ url_for('live_backtest.live_backtest') }}">
             <i class="bi bi-lightning-charge-fill me-1"></i> Live Backtest
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link text-danger" href="{{ url_for('auth.logout') }}">
+            <i class="bi bi-box-arrow-right me-1"></i> Logout
           </a>
         </li>
 
