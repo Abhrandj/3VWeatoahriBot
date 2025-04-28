@@ -1,0 +1,13 @@
+{
+  "build": {
+    "env": {
+      "FLASK_APP": "main.py",
+      "FLASK_ENV": "production",
+      "PORT": "5000"
+    },
+    "command": "pip install -r requirements.txt"
+  },
+  "start": {
+    "command": "python3 main.py"
+  }
+}
