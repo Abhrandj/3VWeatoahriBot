@@ -1,16 +1,15 @@
 import os
-from flask import Blueprint, render_template, request, redirect, url_for, send_from_directory, flash, session
+from flask import Blueprint, render_template, send_from_directory, flash, redirect, url_for, request, session
 
 from core.bot_instance import bot
 from core.graph_generator import generate_pair_chart
 from core.utils import generate_roi_chart
 from core.report_generator import generate_daily_report
+from core.paths import GRAPHS_FOLDER  # <<== Pakai paths
 
-dashboard_bp = Blueprint("dashboard", __name__)
+dashboard_bp = Blueprint("dashboard_bp", __name__)
 
-GRAPH_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'app', 'static', 'graphs'))
-
-@dashboard_bp.route('/', methods=['GET', 'POST'])
+@dashboard_bp.route("/", methods=["GET", "POST"])
 def dashboard():
     if "user" not in session:
         return redirect(url_for('auth.login'))
@@ -34,29 +33,21 @@ def dashboard():
     for sym, pos in positions.items():
         price_now = bot.engine.last_price.get(sym, 0)
         if pos["entry"] > 0:
-            if pos["side"] == "BUY":
-                roi = (price_now - pos["entry"]) / pos["entry"] * 100
-            else:
-                roi = (pos["entry"] - price_now) / pos["entry"] * 100
+            roi = (price_now - pos["entry"]) / pos["entry"] * 100 if pos["side"] == "BUY" else (pos["entry"] - price_now) / pos["entry"] * 100
             total_roi += roi
             roi_count += 1
 
     avg_roi = round(total_roi / roi_count, 2) if roi_count else 0
-
     generate_roi_chart(bot.portfolio.get_closed())
 
     return render_template('dashboard.html', signal=signal, pair_list=pair_list, bot=bot, avg_roi=avg_roi)
 
-@dashboard_bp.route('/graphs/<path:filename>')
+@dashboard_bp.route("/graphs/<path:filename>")
 def graph_file(filename):
-    if "user" not in session:
-        return redirect(url_for('auth.login'))
-    return send_from_directory(GRAPH_FOLDER, filename)
+    return send_from_directory(GRAPHS_FOLDER, filename)
 
-@dashboard_bp.route('/send_daily_report', methods=['POST'])
+@dashboard_bp.route("/send_daily_report", methods=["POST"])
 def send_daily_report():
-    if "user" not in session:
-        return redirect(url_for('auth.login'))
     result = generate_daily_report()
     flash(result)
-    return redirect(url_for('dashboard.dashboard'))
+    return redirect(url_for('dashboard_bp.dashboard'))
