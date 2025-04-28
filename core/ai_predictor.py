@@ -1,11 +1,11 @@
-# core/ai_predictor.py
-
 import os
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
-from prophet import Prophet
+
+# Prophet di-comment supaya gak error di Railway
+# from prophet import Prophet
 
 def predict_next_close_linear(df):
     """
@@ -28,6 +28,9 @@ def predict_next_close_linear(df):
     predicted_close = model.predict(next_time)[0]
 
     # === Buat dan simpan grafik prediksi ===
+    output_path = os.path.join("app", "static", "live_prediction_chart.png")
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
     plt.figure(figsize=(10, 4))
     plt.plot(df["t"], y, label="Actual Close", marker='o')
     plt.plot(next_time[0][0], predicted_close, 'ro', label="Predicted", markersize=8)
@@ -36,32 +39,17 @@ def predict_next_close_linear(df):
     plt.ylabel("Close Price")
     plt.legend()
     plt.grid(True)
-
-    # Pastikan folder static/ ada
-    output_path = os.path.join("flask_app", "static", "live_prediction_chart.png")
     plt.tight_layout()
     plt.savefig(output_path)
     plt.close()
 
     return predicted_close
 
-
 def predict_next_close_prophet(df):
     """
-    Prediksi harga penutupan berikutnya menggunakan Prophet.
+    Dummy prediction untuk Prophet sementara (Railway tidak support GLIBC 2.38).
     """
-    if len(df) < 20 or 'close' not in df.columns or 'timestamp' not in df.columns:
-        return None
-
-    data = df[['timestamp', 'close']].copy()
-    data.rename(columns={'timestamp': 'ds', 'close': 'y'}, inplace=True)
-    data['ds'] = pd.to_datetime(data['ds'])
-
-    model = Prophet(daily_seasonality=True)
-    model.fit(data)
-
-    future = model.make_future_dataframe(periods=1, freq='min')
-    forecast = model.predict(future)
-    next_pred = forecast['yhat'].iloc[-1]
-
-    return next_pred
+    if len(df) > 0 and 'close' in df.columns:
+        return df['close'].iloc[-1]
+    else:
+        return 0
