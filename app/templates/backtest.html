@@ -1,94 +1,56 @@
 {% extends "base.html" %}
-{% block title %}Backtest{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-lg-8">
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <h3 class="card-title mb-4 text-center">Run Backtest from OKX</h3>
+<div class="container mt-4">
+    <h2 class="mb-4">Backtest</h2>
 
-        <!-- Form Input -->
-        <form method="POST">
-          <div class="mb-3">
-            <label class="form-label">Symbol (e.g. BTC-USDT)</label>
-            <input type="text" name="symbol" class="form-control" required value="{{ symbol or '' }}">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Timeframe</label>
-            <select name="bar" class="form-select" required>
-              <option value="1m">1 Minute</option>
-              <option value="5m">5 Minute</option>
-              <option value="15m">15 Minute</option>
-              <option value="1H" selected>1 Hour</option>
-              <option value="4H">4 Hour</option>
-              <option value="1D">1 Day</option>
-            </select>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Total Candles</label>
-            <input type="number" name="total" class="form-control" value="1000" required>
-          </div>
-          <button type="submit" class="btn btn-primary w-100">
-            <i class="bi bi-bar-chart-line me-1"></i> Run Backtest
-          </button>
-        </form>
+    {% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
 
-        {% if error %}
-          <div class="alert alert-danger mt-3">{{ error }}</div>
-        {% endif %}
-
-        <!-- Hasil Backtest -->
-        {% if result %}
-        <hr class="my-4">
-        <h4 class="mb-3">Backtest Result</h4>
-        <ul class="list-group mb-4">
-          <li class="list-group-item d-flex justify-content-between">
-            <strong>Initial Balance:</strong>
-            <span>${{ result.initial_balance }}</span>
-          </li>
-          <li class="list-group-item d-flex justify-content-between">
-            <strong>Final Balance:</strong>
-            <span>${{ result.final_balance }}</span>
-          </li>
-          <li class="list-group-item d-flex justify-content-between">
-            <strong>Total Profit:</strong>
-            <span class="{% if result.profit >= 0 %}text-success{% else %}text-danger{% endif %}">
-              ${{ result.profit }}
-            </span>
-          </li>
-          <li class="list-group-item d-flex justify-content-between">
-            <strong>Duration:</strong>
-            <span>{{ result.duration }}s</span>
-          </li>
-        </ul>
-
-        <h5 class="mb-3">Trade Log</h5>
-        {% if result.trades %}
-          <ul class="list-group small">
-            {% for trade in result.trades %}
-              <li class="list-group-item">
-                {{ trade }}
-                {% if "Tags:" in trade %}
-                  <div class="mt-1">
-                    {% for tag in trade.split("Tags:")[-1].strip(" []").split(", ") %}
-                      <span class="badge bg-info text-dark me-1">{{ tag }}</span>
-                    {% endfor %}
-                  </div>
-                {% endif %}
-              </li>
-            {% endfor %}
-          </ul>
-        {% else %}
-          <div class="alert alert-secondary">No trades executed during backtest.</div>
-        {% endif %}
-        {% endif %}
-
-        <div class="mt-4 text-center">
-          <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-link">← Back to Dashboard</a>
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Upload CSV untuk Backtest</h5>
+            <form method="POST" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <input type="file" class="form-control" name="csv_file" accept=".csv" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Upload & Backtest</button>
+            </form>
         </div>
-      </div>
     </div>
-  </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Download Data dan Backtest</h5>
+            <form method="POST">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <input type="text" class="form-control" name="symbol" placeholder="Contoh: BTC/USDT" required>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="text" class="form-control" name="bar" placeholder="Contoh: 1h" required>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="number" class="form-control" name="total" placeholder="Jumlah Data" value="1000">
+                    </div>
+                    <div class="col-md-2 d-grid">
+                        <button type="submit" class="btn btn-success">Fetch & Backtest</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if result %}
+    <div class="card mt-4">
+        <div class="card-body">
+            <h5 class="card-title">Hasil Backtest</h5>
+            <p><strong>ROI:</strong> {{ result.roi }}%</p>
+            <p><strong>Profit:</strong> {{ result.profit }}</p>
+            <p><strong>Number of Trades:</strong> {{ result.num_trades }}</p>
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
