@@ -1,5 +1,3 @@
-# core/live_backtest_engine.py
-
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -9,23 +7,25 @@ def run_live_backtest(df):
     """
     Fungsi live backtest:
     - Ambil 20 bar terakhir
-    - Buat signal BUY/SELL
+    - Buat signal BUY/SELL berdasarkan perubahan close
     - Buat chart harga Close
-    - Return list dict: datetime, signal, price
+    - Return list of dict: datetime, open, high, low, close, volume
     """
     if df.empty or 'close' not in df.columns:
         return None
 
     df = df.tail(20).copy()
 
-    # === Buat Signal BUY/SELL ===
+    # === Persiapan Data Tabel ===
     result = []
-    for i in range(1, len(df)):
-        signal = "BUY" if df['close'].iloc[i] > df['close'].iloc[i-1] else "SELL"
+    for i in range(len(df)):
         result.append({
             "datetime": df['timestamp'].iloc[i].strftime("%Y-%m-%d %H:%M"),
-            "signal": signal,
-            "price": round(df['close'].iloc[i], 2)
+            "open": round(df['open'].iloc[i], 2),
+            "high": round(df['high'].iloc[i], 2),
+            "low": round(df['low'].iloc[i], 2),
+            "close": round(df['close'].iloc[i], 2),
+            "volume": round(df['volume'].iloc[i], 2),
         })
 
     # === Buat Chart Harga Close ===
