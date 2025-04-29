@@ -43,45 +43,39 @@
 ## Screenshots:
 
 | Login Page | Welcome Home |
-|:-----------:|:------------:|
-| ![Login](static/screenshots/login.jpeg) | ![Home](static/screenshots/welcome.jpeg) |
+|------------|--------------|
+| ![](static/screenshots/screenshot_1.jpeg) | ![](static/screenshots/screenshot_2.jpeg) |
 
-| Dashboard | Telegram Bot Notification |
-|:---------:|:--------------------------:|
-| ![Dashboard](static/screenshots/dashboard.jpeg) | ![Telegram](static/screenshots/telegram.jpeg) |
+| Dashboard + Telegram | Dashboard |
+|----------------------|-----------|
+| ![](static/screenshots/screenshot_3.jpeg) | ![](static/screenshots/screenshot_4.jpeg) |
 
 ---
 
 ## Struktur Project:
 ```bash
 3VWeatoahriBot/
-â
-âââ app/
-â   âââ __init__.py
-â   âââ routes/
-â   âââ templates/
-â   âââ static/
-â       âââ graphs/
-â       âââ portfolio/
-â       âââ screenshots/
-â
-âââ core/
-â   âââ trading_engine.py
-â   âââ risk_management.py
-â   âââ portfolio_manager.py
-â   âââ ai_predictor.py
-â   âââ mini_chart.py
-â   âââ telegram.py
-â   âââ okx_sdk.py
-â   âââ bot_instance.py
-â
-âââ uploads/
-â
-âââ main.py
-âââ Procfile
-âââ README.md
-âââ requirements.txt
-âââ .env (disimpan privat)
+├── app/
+│   ├── __init__.py
+│   ├── routes/
+│   ├── templates/
+│   └── static/
+│       ├── graphs/
+│       ├── portfolio/
+│       └── screenshots/
+├── core/
+│   ├── trading_engine.py
+│   ├── risk_management.py
+│   ├── portfolio_manager.py
+│   ├── ai_predictor.py
+│   ├── mini_chart.py
+│   ├── telegram.py
+│   ├── okx_sdk.py
+│   └── bot_instance.py
+├── main.py
+├── run.py
+├── requirements.txt
+└── README.md
 ```
 
 ---
@@ -110,6 +104,8 @@ python3 main.py
 
 ## License
 MIT License - Free to Use, Customize, Improve.
+
+This project is licensed for personal use only. Commercial distribution is prohibited without permission.
 
 ---
 
