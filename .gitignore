@@ -62,7 +62,7 @@ db.sqlite3-journal
 # Flask
 instance/
 .webassets-cache
-flask_app/            # <<<<<<< Tambahan, karena folder rusak sebelumnya
+flask_app/      # Tambahan manual, karena folder bekas error corrupt
 
 # Scrapy
 .scrapy
@@ -153,3 +153,10 @@ backup_*/
 __MACOSX/
 *.zip
 *.tar.gz
+
+# Project Specific - TradingBot
+app/static/graphs/
+app/static/portfolio/
+app/static/screenshots/  # <-- Kalau screenshot hasil auto, bisa dikecualikan kalau perlu
+app/static/live_prediction_chart.png
+project_ready_for_railway.zip
