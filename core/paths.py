@@ -1,10 +1,10 @@
 import os
 
-# Path dasar
-BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+# Pastikan base path dinamis berdasarkan posisi jalan app
+BASE_DIR = os.getcwd()
 
 # Folder uploads
-UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
+UPLOAD_FOLDER = os.path.join(BASE_DIR, "app", "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # Folder untuk grafik backtest & dashboard
