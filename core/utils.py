@@ -1,7 +1,9 @@
 import os
+import csv
 import matplotlib.pyplot as plt
 from core.okx_sdk import OKXClient as CustomOKX
 
+# === 1. Fetch OHLCV dari OKX ===
 def fetch_ohlcv(symbol, interval='1m', limit=100):
     """
     Mengambil data OHLCV dari OKX (tanpa autentikasi).
@@ -32,8 +34,8 @@ def fetch_ohlcv(symbol, interval='1m', limit=100):
         print(f"[fetch_ohlcv] Gagal ambil data {symbol}: {e}")
         return None
 
-
-def generate_roi_chart(closed_positions, save_path="flask_app/static/graphs/cumulative_roi.png"):
+# === 2. Generate Cumulative ROI Chart ===
+def generate_roi_chart(closed_positions, save_path="app/static/graphs/cumulative_roi.png"):
     """
     Membuat grafik kumulatif ROI dari posisi tertutup.
     :param closed_positions: list posisi closed dari portfolio
@@ -58,3 +60,24 @@ def generate_roi_chart(closed_positions, save_path="flask_app/static/graphs/cumu
         plt.close()
     except Exception as e:
         print(f"[ROI Chart] Gagal membuat chart ROI: {e}")
+
+# === 3. Save data to CSV ===
+def save_to_csv(filepath, data):
+    """
+    Simpan data dict ke file CSV.
+    :param filepath: path ke file CSV
+    :param data: dict atau list of dict
+    """
+    if not data:
+        return
+
+    os.makedirs(os.path.dirname(filepath), exist_ok=True)
+
+    keys = data[0].keys() if isinstance(data, list) else data.keys()
+    with open(filepath, mode="w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=keys)
+        writer.writeheader()
+        if isinstance(data, list):
+            writer.writerows(data)
+        else:
+            writer.writerow(data)

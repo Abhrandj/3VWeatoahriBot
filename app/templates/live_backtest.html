@@ -13,15 +13,15 @@
         <!-- Form Pilih Pair -->
         <form method="POST" class="row g-3 mb-3">
           <div class="col-md-4">
-            <input type="text" class="form-control" name="pair" value="{{ selected_pair }}" placeholder="e.g. BTC-USDT">
+            <input type="text" class="form-control" name="symbol" value="{{ selected_pair }}" placeholder="e.g. BTC-USDT">
           </div>
           <div class="col-md-3">
             <select name="interval" class="form-select">
-              <option value="1m" {% if request.form.interval == "1m" %}selected{% endif %}>1m</option>
-              <option value="5m" {% if request.form.interval == "5m" %}selected{% endif %}>5m</option>
-              <option value="15m" {% if request.form.interval == "15m" %}selected{% endif %}>15m</option>
-              <option value="1H" {% if request.form.interval == "1H" %}selected{% endif %}>1H</option>
-              <option value="4H" {% if request.form.interval == "4H" %}selected{% endif %}>4H</option>
+              <option value="1m" {% if interval == "1m" %}selected{% endif %}>1m</option>
+              <option value="5m" {% if interval == "5m" %}selected{% endif %}>5m</option>
+              <option value="15m" {% if interval == "15m" %}selected{% endif %}>15m</option>
+              <option value="1H" {% if interval == "1H" %}selected{% endif %}>1H</option>
+              <option value="4H" {% if interval == "4H" %}selected{% endif %}>4H</option>
             </select>
           </div>
           <div class="col-md-2">
@@ -37,51 +37,15 @@
               </label>
             </div>
           </div>
-          <div class="col-12 text-center" id="spinner-area" style="display: none;">
-            <div class="spinner-border text-primary mt-3" role="status">
-              <span class="visually-hidden">Loading...</span>
-            </div>
-            <div class="text-muted small mt-1">Loading prediction...</div>
-          </div>
         </form>
 
-        <!-- Timestamp -->
+        {% if last_updated %}
         <div class="text-end text-muted small mb-2">
-          Last Updated: {{ current_time }}
-        </div>
-
-        <!-- Hasil Prediksi -->
-        {% if prediction %}
-        <div id="prediction-container" class="alert alert-info text-center highlight">
-          <h5 class="mb-2">
-            Last Price: <strong>${{ prediction.last }}</strong> |
-            Predicted: <strong>${{ prediction.predicted }}</strong> |
-            Signal:
-            <span class="badge {% if prediction.signal == 'BUY' %}bg-success{% else %}bg-danger{% endif %}">
-              {{ prediction.signal }}
-            </span>
-          </h5>
-          <p class="mb-0">
-            Entry: <strong>${{ prediction.entry }}</strong> |
-            SL: <span class="text-danger">${{ prediction.sl }}</span> |
-            TP: <span class="text-success">${{ prediction.tp }}</span>
-          </p>
-
-          <!-- Tombol Open Trade -->
-          <form action="{{ url_for('live_backtest.open_trade') }}" method="POST">
-            <input type="hidden" name="pair" value="{{ selected_pair }}">
-            <input type="hidden" name="entry" value="{{ prediction.entry }}">
-            <input type="hidden" name="sl" value="{{ prediction.sl }}">
-            <input type="hidden" name="tp" value="{{ prediction.tp }}">
-            <input type="hidden" name="signal" value="{{ prediction.signal }}">
-            <button class="btn btn-danger mt-3" type="submit">
-              <i class="bi bi-lightning me-1"></i> Open Trade Langsung
-            </button>
-          </form>
+          Last Updated: {{ last_updated }}
         </div>
         {% endif %}
 
-        <!-- Grafik Prediksi -->
+        {% if result %}
         <div class="card mt-4 shadow-sm">
           <div class="card-body text-center">
             <h5 class="card-title">Live Prediction Chart</h5>
@@ -94,8 +58,6 @@
           </div>
         </div>
 
-        <!-- Tabel Data -->
-        {% if result %}
         <div class="table-responsive mt-4">
           <table class="table table-striped table-sm table-hover">
             <thead class="table-light">
@@ -122,9 +84,9 @@
             </tbody>
           </table>
         </div>
-        {% else %}
-        <div class="alert alert-warning text-center mt-3">
-          Data tidak tersedia atau gagal memuat data OHLCV.
+        {% elif error %}
+        <div class="alert alert-warning text-center mt-4">
+          {{ error }}
         </div>
         {% endif %}
       </div>

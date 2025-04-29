@@ -1,12 +1,12 @@
 import os
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from werkzeug.utils import secure_filename
-from core.paths import UPLOAD_FOLDER
+
 from core.backtest_engine import run_backtest
 from core.data_downloader import fetch_and_save
+from core.paths import UPLOAD_FOLDER
 
 backtest_bp = Blueprint("backtest", __name__)
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 @backtest_bp.route("/", methods=["GET", "POST"])
 def backtest():
