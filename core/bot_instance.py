@@ -235,5 +235,27 @@ class BotInstance:
                     trigger_price = best * 1.003
                     send_telegram_message(f"[TRAILING SELL] {pair} | New SL: {trigger_price:.2f}")
 
+def get_price(self, pair):
+    # Jika pair belum pakai -SWAP, tambahkan otomatis
+    futures_pair = pair if pair.endswith("-SWAP") else f"{pair}-SWAP"
+
+    price = self.engine.last_price.get(futures_pair)
+    if price:
+        return price
+
+    try:
+        ticker = self.engine.okx.get_ticker(futures_pair)
+        price = float(ticker.get("last", 0))
+        if price > 0:
+            self.engine.last_price[futures_pair] = price
+            self.log_price(futures_pair, price)
+            return price
+    except Exception as e:
+        msg = f"[ERROR] get_price({futures_pair}) failed: {e}"
+        print(msg)
+        send_telegram_message(msg)
+
+    return None
+
 # Singleton
 bot = BotInstance.get_instance()
