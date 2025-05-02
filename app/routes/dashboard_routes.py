@@ -7,6 +7,7 @@ from core.utils import generate_roi_chart, is_live_mode
 from core.graph_generator import generate_pair_chart
 from core.report_generator import generate_daily_report
 from core.paths import GRAPHS_FOLDER
+from core.telegram import send_telegram_message
 
 dashboard_bp = Blueprint("dashboard", __name__)
 
@@ -18,17 +19,14 @@ def dashboard():
     signal = bot.run(notify=False)
     pair_list = bot.engine.symbols
 
-    # Tambah Pair baru
     if request.method == "POST":
         new_pair = request.form.get("pair")
         if new_pair and new_pair not in pair_list:
             pair_list.append(new_pair)
 
-    # Generate chart per pair
     for pair in pair_list:
         generate_pair_chart(pair)
 
-    # Hitung ROI aktif
     positions = bot.portfolio.get_all()
     total_roi, roi_count = 0, 0
     for sym, pos in positions.items():
@@ -41,7 +39,6 @@ def dashboard():
             roi_count += 1
     avg_roi = round(total_roi / roi_count, 2) if roi_count else 0
 
-    # ROI Chart historis
     generate_roi_chart(bot.portfolio.get_closed())
 
     last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -59,7 +56,7 @@ def dashboard():
 
 @dashboard_bp.route("/start-bot", methods=["POST"])
 def start_bot():
-    result = bot.run(notify=True)
+    bot.run(notify=True)
     flash("Bot dijalankan secara manual!", "success")
     return redirect(url_for("dashboard.dashboard"))
 
@@ -80,6 +77,17 @@ def toggle_bot_mode():
     new_mode = request.form.get("mode", "TEST").upper()
     session["bot_mode_override"] = new_mode
     flash(f"Bot mode changed to {new_mode}", "info")
+    return redirect(url_for("dashboard.dashboard"))
+
+@dashboard_bp.route("/refresh_price", methods=["POST"])
+def refresh_price():
+    for pair in bot.engine.symbols:
+        price = bot.get_price(pair)
+        if price:
+            flash(f"{pair} price refreshed: {price}", "success")
+        else:
+            flash(f"[ERROR] Gagal refresh {pair}", "danger")
+            send_telegram_message(f"[ERROR] Refresh Price Gagal: {pair}")
     return redirect(url_for("dashboard.dashboard"))
 
 @dashboard_bp.route("/graphs/<path:filename>")

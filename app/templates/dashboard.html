@@ -32,6 +32,10 @@
       </button>
     </form>
 
+    <form method="POST" action="{{ url_for('dashboard.refresh_price') }}">
+      <button class="btn btn-sm btn-warning">Refresh Price</button>
+    </form>
+
     <!-- Toggle Mode TEST/LIVE -->
     <form method="POST" action="{{ url_for('dashboard.toggle_bot_mode') }}">
       <input type="hidden" name="mode" value="{{ 'LIVE' if bot_mode == 'TEST' else 'TEST' }}">

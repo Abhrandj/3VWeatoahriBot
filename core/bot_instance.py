@@ -1,6 +1,6 @@
-# core/bot_instance.py
-
 import os
+import csv
+import datetime
 from dotenv import load_dotenv
 from core.okx_client import OKXClient
 from core.trading_engine import TradingEngine
@@ -50,15 +50,24 @@ class BotInstance:
         try:
             ticker = self.engine.okx.get_ticker(pair)
             price = float(ticker.get("last", 0))
-            self.engine.last_price[pair] = price
-            return price
+            if price > 0:
+                self.engine.last_price[pair] = price
+                self.log_price(pair, price)
+                return price
         except Exception as e:
             print(f"[ERROR] Failed to fetch real-time price for {pair}: {e}")
-            return None
+            send_telegram_message(f"[ERROR] get_price({pair}) failed: {e}")
+        return None
+
+    def log_price(self, pair, price):
+        path = f"data/price_log_{pair.replace('-', '')}.csv"
+        os.makedirs("data", exist_ok=True)
+        with open(path, "a", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow([datetime.datetime.now().isoformat(), pair, price])
 
     def run(self, notify=True):
         self.ai_signals = {}
-
         for symbol in self.engine.symbols:
             df = self.engine.get_data(symbol)
             if df is not None and len(df) >= 10:
@@ -92,11 +101,16 @@ class BotInstance:
                     side = pos["side"]
                     roi = (current_price - entry) / entry * 100 if side == "BUY" else (entry - current_price) / entry * 100
                     if notify:
-                        send_telegram_message(f"Trailing Stop Triggered: {symbol}\nExit @ {current_price:.2f}\nROI: {roi:.2f}%")
+                        send_telegram_message(
+                            f"Trailing Stop Triggered: {symbol}\nExit @ {current_price:.2f}\nROI: {roi:.2f}%"
+                        )
                 self.portfolio.close_position(symbol)
 
             if notify:
-                text = f"{symbol}\nStrategy: {action}\nAI: {self.ai_signals.get(symbol, '-')}\nPrice: {current_price:.2f}\nTags: {', '.join(tags)}"
+                text = (
+                    f"{symbol}\nStrategy: {action}\nAI: {self.ai_signals.get(symbol, '-')}\n"
+                    f"Price: {current_price:.2f}\nTags: {', '.join(tags)}"
+                )
                 chart = generate_mini_chart(symbol)
                 if chart and os.path.exists(chart):
                     send_telegram_photo(chart, caption=text)
@@ -123,7 +137,6 @@ class BotInstance:
         if not price:
             send_telegram_message(f"[ERROR] Price not available for {pair}")
             return
-
         qty = self.calculate_dynamic_lot_size(pair, balance, risk_pct, leverage, price)
 
         if is_live_mode():
@@ -142,7 +155,6 @@ class BotInstance:
         if not price:
             send_telegram_message(f"[ERROR] Price not available for {pair}")
             return
-
         qty = self.calculate_dynamic_lot_size(pair, balance, risk_pct, leverage, price)
 
         if is_live_mode():
@@ -237,5 +249,5 @@ class BotInstance:
                     trigger_price = best * 1.003
                     send_telegram_message(f"[TRAILING SELL] {pair} | New SL: {trigger_price:.2f}")
 
-# Singleton instance
+# Singleton
 bot = BotInstance.get_instance()
