@@ -1,4 +1,7 @@
+# main.py
+
 import os
+from app import create_app
 
 # Auto-create essential folders
 required_dirs = [
@@ -7,15 +10,12 @@ required_dirs = [
     "app/static/portfolio"
 ]
 
-for d in required_dirs:
-    os.makedirs(d, exist_ok=True)
+for directory in required_dirs:
+    os.makedirs(directory, exist_ok=True)
 
-# Import Flask App
-from app import create_app
-
-# Create app instance
+# Create Flask app instance
 app = create_app()
 
-# Run app
+# Run server
 if __name__ == "__main__":
     app.run(debug=False, host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))

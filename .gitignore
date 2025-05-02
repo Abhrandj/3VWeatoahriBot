@@ -118,3 +118,6 @@ docs/_build/
 test_telegram.py
 test_*.py
 structure.txt
+
+# === Runtime Temp Files ===
+*.pid
