@@ -44,6 +44,9 @@ class BotInstance:
         return cls._instance
 
     def get_price(self, pair):
+        if not pair.endswith("-SWAP"):
+            pair = f"{pair}-SWAP"
+
         price = self.engine.last_price.get(pair)
         if price:
             return price
@@ -55,12 +58,12 @@ class BotInstance:
                 self.log_price(pair, price)
                 return price
         except Exception as e:
-            print(f"[ERROR] Failed to fetch real-time price for {pair}: {e}")
             send_telegram_message(f"[ERROR] get_price({pair}) failed: {e}")
+            print(f"[ERROR] Failed to fetch real-time price for {pair}: {e}")
         return None
 
     def log_price(self, pair, price):
-        path = f"data/price_log_{pair.replace('-', '')}.csv"
+        path = f"data/price_log_{pair.replace('-', '').replace('SWAP', '')}.csv"
         os.makedirs("data", exist_ok=True)
         with open(path, "a", newline="") as f:
             writer = csv.writer(f)
@@ -101,16 +104,11 @@ class BotInstance:
                     side = pos["side"]
                     roi = (current_price - entry) / entry * 100 if side == "BUY" else (entry - current_price) / entry * 100
                     if notify:
-                        send_telegram_message(
-                            f"Trailing Stop Triggered: {symbol}\nExit @ {current_price:.2f}\nROI: {roi:.2f}%"
-                        )
+                        send_telegram_message(f"Trailing Stop Triggered: {symbol}\nExit @ {current_price:.2f}\nROI: {roi:.2f}%")
                 self.portfolio.close_position(symbol)
 
             if notify:
-                text = (
-                    f"{symbol}\nStrategy: {action}\nAI: {self.ai_signals.get(symbol, '-')}\n"
-                    f"Price: {current_price:.2f}\nTags: {', '.join(tags)}"
-                )
+                text = f"{symbol}\nStrategy: {action}\nAI: {self.ai_signals.get(symbol, '-')}\nPrice: {current_price:.2f}\nTags: {', '.join(tags)}"
                 chart = generate_mini_chart(symbol)
                 if chart and os.path.exists(chart):
                     send_telegram_photo(chart, caption=text)
@@ -138,17 +136,18 @@ class BotInstance:
             send_telegram_message(f"[ERROR] Price not available for {pair}")
             return
         qty = self.calculate_dynamic_lot_size(pair, balance, risk_pct, leverage, price)
+        pair_swap = pair if pair.endswith("-SWAP") else f"{pair}-SWAP"
 
         if is_live_mode():
-            self.engine.okx.place_order(pair, side="buy", size=qty)
+            self.engine.okx.place_order(pair_swap, side="buy", size=qty)
             sl = round(price * 0.99, 2)
             tp = round(price * 1.03, 2)
-            self.engine.okx.place_trigger_order(pair, side="sell", trigger_price=tp, order_type="limit", size=qty)
-            self.engine.okx.place_trigger_order(pair, side="sell", trigger_price=sl, order_type="market", size=qty)
-            self.trailing_data[pair] = {"entry_price": price, "best_price": price, "qty": qty, "side": "BUY"}
-            send_telegram_message(f"[REAL BUY] {pair} | Qty: {qty} | Entry: {price} | TP: {tp} | SL: {sl}")
+            self.engine.okx.place_trigger_order(pair_swap, side="sell", trigger_price=tp, order_type="limit", size=qty)
+            self.engine.okx.place_trigger_order(pair_swap, side="sell", trigger_price=sl, order_type="market", size=qty)
+            self.trailing_data[pair_swap] = {"entry_price": price, "best_price": price, "qty": qty, "side": "BUY"}
+            send_telegram_message(f"[REAL BUY] {pair_swap} | Qty: {qty} | Entry: {price} | TP: {tp} | SL: {sl}")
         else:
-            send_telegram_message(f"[TEST BUY] {pair} | Qty: {qty} | Price: {price}")
+            send_telegram_message(f"[TEST BUY] {pair_swap} | Qty: {qty} | Price: {price}")
 
     def open_sell(self, pair, balance=100, risk_pct=0.005, leverage=10):
         price = self.get_price(pair)
@@ -156,19 +155,21 @@ class BotInstance:
             send_telegram_message(f"[ERROR] Price not available for {pair}")
             return
         qty = self.calculate_dynamic_lot_size(pair, balance, risk_pct, leverage, price)
+        pair_swap = pair if pair.endswith("-SWAP") else f"{pair}-SWAP"
 
         if is_live_mode():
-            self.engine.okx.place_order(pair, side="sell", size=qty)
+            self.engine.okx.place_order(pair_swap, side="sell", size=qty)
             sl = round(price * 1.01, 2)
             tp = round(price * 0.97, 2)
-            self.engine.okx.place_trigger_order(pair, side="buy", trigger_price=tp, order_type="limit", size=qty)
-            self.engine.okx.place_trigger_order(pair, side="buy", trigger_price=sl, order_type="market", size=qty)
-            self.trailing_data[pair] = {"entry_price": price, "best_price": price, "qty": qty, "side": "SELL"}
-            send_telegram_message(f"[REAL SELL] {pair} | Qty: {qty} | Entry: {price} | TP: {tp} | SL: {sl}")
+            self.engine.okx.place_trigger_order(pair_swap, side="buy", trigger_price=tp, order_type="limit", size=qty)
+            self.engine.okx.place_trigger_order(pair_swap, side="buy", trigger_price=sl, order_type="market", size=qty)
+            self.trailing_data[pair_swap] = {"entry_price": price, "best_price": price, "qty": qty, "side": "SELL"}
+            send_telegram_message(f"[REAL SELL] {pair_swap} | Qty: {qty} | Entry: {price} | TP: {tp} | SL: {sl}")
         else:
-            send_telegram_message(f"[TEST SELL] {pair} | Qty: {qty} | Price: {price}")
+            send_telegram_message(f"[TEST SELL] {pair_swap} | Qty: {qty} | Price: {price}")
 
     def close_position(self, pair):
+        pair_swap = pair if pair.endswith("-SWAP") else f"{pair}-SWAP"
         pos = self.portfolio.get_all().get(pair)
         if not pos:
             send_telegram_message(f"[CLOSE FAILED] No open position for {pair}")
@@ -179,20 +180,22 @@ class BotInstance:
             send_telegram_message(f"[ERROR] Cannot close, price not available for {pair}")
             return
 
-        self.cancel_all_triggers(pair)
+        self.cancel_all_triggers(pair_swap)
         side = "sell" if pos["side"] == "BUY" else "buy"
         qty = round(pos.get("entry_amount", 0.001), 4)
 
         if is_live_mode():
-            self.engine.okx.place_order(pair, side=side, size=qty)
-            send_telegram_message(f"[MANUAL CLOSE] {pair} | Side: {side} | Qty: {qty} | Price: {price}")
+            self.engine.okx.place_order(pair_swap, side=side, size=qty)
+            send_telegram_message(f"[MANUAL CLOSE] {pair_swap} | Side: {side} | Qty: {qty} | Price: {price}")
         else:
-            send_telegram_message(f"[TEST CLOSE] {pair} | Side: {side} | Qty: {qty} | Price: {price}")
+            send_telegram_message(f"[TEST CLOSE] {pair_swap} | Side: {side} | Qty: {qty} | Price: {price}")
 
-        if pair in self.trailing_data:
-            del self.trailing_data[pair]
+        if pair_swap in self.trailing_data:
+            del self.trailing_data[pair_swap]
 
     def cancel_all_triggers(self, pair):
+        if not pair.endswith("-SWAP"):
+            pair = f"{pair}-SWAP"
         try:
             result = self.engine.okx.cancel_algos(pair)
             if result.get("error"):
@@ -206,23 +209,6 @@ class BotInstance:
         except Exception as e:
             send_telegram_message(f"[ERROR] Cancel trigger gagal {pair} | {str(e)}")
 
-    def list_active_triggers(self, pair):
-        try:
-            orders = self.engine.okx.get_active_algos(pair)
-            if not orders:
-                send_telegram_message(f"[NO TRIGGERS] Tidak ada trigger aktif untuk {pair}")
-                return
-            msg = f"[TRIGGERS AKTIF] {pair}:\n"
-            for o in orders:
-                side = o.get("side", "-")
-                trigger_px = o.get("triggerPx", "-")
-                order_type = o.get("ordType", "-")
-                algo_id = o.get("algoId", "-")
-                msg += f"- {side.upper()} | {order_type} | Trigger: {trigger_px} | ID: {algo_id}\n"
-            send_telegram_message(msg)
-        except Exception as e:
-            send_telegram_message(f"[ERROR] Gagal ambil trigger {pair} | {str(e)}")
-
     def manage_trailing(self):
         for pair, data in self.trailing_data.items():
             current_price = self.get_price(pair)
@@ -235,7 +221,7 @@ class BotInstance:
 
             if side == "BUY" and current_price > best:
                 self.trailing_data[pair]["best_price"] = current_price
-            if side == "SELL" and current_price < best:
+            elif side == "SELL" and current_price < best:
                 self.trailing_data[pair]["best_price"] = current_price
 
             if side == "BUY":
@@ -243,7 +229,7 @@ class BotInstance:
                 if gain > 1:
                     trigger_price = best * 0.997
                     send_telegram_message(f"[TRAILING BUY] {pair} | New SL: {trigger_price:.2f}")
-            if side == "SELL":
+            elif side == "SELL":
                 gain = (entry - current_price) / entry * 100
                 if gain > 1:
                     trigger_price = best * 1.003
