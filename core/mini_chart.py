@@ -8,7 +8,7 @@ from core.utils import fetch_ohlcv
 from core.indicators import calculate_ema
 
 # Folder untuk menyimpan mini chart
-MINI_FOLDER = "flask_app/static/mini"
+MINI_FOLDER = "static/mini"
 os.makedirs(MINI_FOLDER, exist_ok=True)
 
 def generate_mini_chart(symbol, interval='1m', limit=100):

@@ -1,9 +1,10 @@
 import pandas as pd
 import numpy as np
 import time
-from strategies.bb_breakout_strategy import bb_breakout_strategy
-from strategies.ema_bb_strategy import ema_bb_strategy
-from strategies.volume_spike_strategy import volume_spike_strategy
+from strategies.bb_breakout_strategy import BB_BreakoutStrategy
+from strategies.ema_pullback_strategy import EMA_PullbackStrategy
+from strategies.volume_spike_strategy import Volume_SpikeStrategy
+from strategies.ema_bb_crossover_strategy import EMA_BB_CrossoverStrategy
 
 class RiskManager:
     def __init__(self, max_risk_per_trade=0.02, account_balance=1000):
@@ -75,29 +76,42 @@ class BacktestEngine:
         stop_loss = 0
         take_profit = 0
 
-        for i in range(1, len(df)):
-            price = df['close'][i]
-            if df.iloc[i].isnull().any():
+        # Inisialisasi strategi baru
+        bb_strategy = BB_BreakoutStrategy(['TEST'], lambda _: df)
+        ema_pullback = EMA_PullbackStrategy(['TEST'], lambda _: df)
+        volume_spike = Volume_SpikeStrategy(['TEST'], lambda _: df)
+        ema_bb_cross = EMA_BB_CrossoverStrategy(['TEST'], lambda _: df, lambda _: "BUY")
+
+        for i in range(50, len(df)):
+            current_df = df.iloc[:i+1]
+
+            price = current_df['close'].iloc[-1]
+            if current_df.isnull().any().any():
                 continue
 
-            ai_signal = "BUY" if df['rsi'][i] < 50 else "SELL"
+            # Simulasi AI signal (sederhana)
+            ai_signal = "BUY" if current_df['rsi'].iloc[-1] < 50 else "SELL"
 
-            # === Multi-strategy Tags ===
-            bb_tags = bb_breakout_strategy(df.iloc[:i+1])
-            ema_tags = ema_bb_strategy(df.iloc[:i+1], ai_signal)
-            vol_tags = volume_spike_strategy(df.iloc[:i+1])
+            # Update AI signal untuk EMA+BB crossover
+            ema_bb_cross.get_ai_signal = lambda _: ai_signal
 
-            tags = bb_tags + ema_tags + vol_tags
+            # Dapatkan tags dari semua strategi
+            bb_tags = bb_strategy.check_signals().get('TEST', {}).get('tags', [])
+            ema_tags = ema_pullback.check_signals().get('TEST', {}).get('tags', [])
+            vol_tags = volume_spike.check_signals().get('TEST', {}).get('tags', [])
+            cross_tags = ema_bb_cross.check_signals().get('TEST', {}).get('tags', [])
+
+            tags = bb_tags + ema_tags + vol_tags + cross_tags
 
             if position is None:
-                if "EMA_BB_BUY" in tags or "VOL_SPIKE_BUY" in tags:
+                if any(tag.endswith("BUY") for tag in tags):
                     entry_price = price
                     stop_loss = risk_manager.calculate_stop_loss(price)
                     take_profit = risk_manager.calculate_take_profit(price)
                     position = 'long'
                     self.trade_log.append(f"BUY at {price:.2f} | Tags: {tags}")
             elif position == 'long':
-                if price <= stop_loss or price >= take_profit or "EMA_BB_SELL" in tags or "VOL_SPIKE_SELL" in tags:
+                if price <= stop_loss or price >= take_profit or any(tag.endswith("SELL") for tag in tags):
                     pnl = (price - entry_price)
                     balance += pnl
                     risk_manager.update_account_balance(balance)

@@ -1,162 +1,120 @@
-# Byte-compiled / optimized / DLL files
+# === Python Cache ===
 __pycache__/
 *.py[cod]
 *$py.class
 
-# C extensions
+# === C Extensions ===
 *.so
 
-# Distribution / packaging
+# === Packaging ===
 .Python
 build/
-develop-eggs/
 dist/
 downloads/
-eggs/
 .eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
+*.egg
+*.egg-info/
+*.tar.gz
+*.zip
+*.whl
+.installed.cfg
 wheels/
 share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
 MANIFEST
 
-# PyInstaller
-*.manifest
+# === PyInstaller ===
 *.spec
+*.manifest
 
-# Installer logs
+# === Installer Logs ===
 pip-log.txt
 pip-delete-this-directory.txt
 
-# Unit test / coverage reports
+# === Test & Coverage ===
 htmlcov/
 .tox/
 .nox/
-.coverage
-.coverage.*
+.coverage*
 .cache
+.pytest_cache/
 nosetests.xml
 coverage.xml
 *.cover
 *.py,cover
 .hypothesis/
-.pytest_cache/
-cover/
 
-# Translations
+# === Translations ===
 *.mo
 *.pot
 
-# Django
+# === Flask / Web Files ===
+instance/
+.webassets-cache
+flask_app/
+app/static/graphs/
+app/static/portfolio/
+app/static/screenshots/
+app/static/live_prediction_chart.png
+
+# === DB / Logs ===
 *.log
-local_settings.py
 db.sqlite3
 db.sqlite3-journal
 
-# Flask
-instance/
-.webassets-cache
-flask_app/      # Tambahan manual, karena folder bekas error corrupt
+# === Editor / System Files ===
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.bak
 
-# Scrapy
-.scrapy
+# === Replit & Railway ===
+.replit
+uv.lock
+railway.json.lock
 
-# Sphinx documentation
-docs/_build/
-
-# PyBuilder
-.pybuilder/
-target/
-
-# Jupyter Notebook
-.ipynb_checkpoints/
-
-# IPython
-profile_default/
-ipython_config.py
-
-# pyenv
-# .python-version
-
-# Dependency management
-Pipfile.lock
-poetry.lock
-pdm.lock
-.pdm.toml
-
-# PEP 582
-__pypackages__/
-
-# Celery
-celerybeat-schedule
-celerybeat.pid
-
-# SageMath
-*.sage.py
-
-# Environments
+# === Env Files ===
 .env
 .env.*
 .venv
-env/
 venv/
 ENV/
+env/
 env.bak/
 venv.bak/
 
-# IDE & Editor
-.idea/
-.vscode/
-.spyderproject
-.spyproject
-.ropeproject
-
-# mkdocs
-/site
-
-# Type checkers
-.mypy_cache/
-.dmypy.json
-dmypy.json
-.pyre/
-.pytype/
-
-# Cython debug
-cython_debug/
-
-# System files
-.DS_Store
-Thumbs.db
-
-# Docker
-# docker-compose.override.yml
-
-# Railway
-railway.json.lock
-
-# Replit Specific
-.replit
-uv.lock
-
-# Temporary / Testing Files
-generated-icon.png
-test_telegram.py
-
-# Backup / Old Backup Folders
+# === Backup / Migration / Debug ===
 backup_*/
+*backup*.py
+*.bak
 __MACOSX/
-*.zip
-*.tar.gz
-
-# Project Specific - TradingBot
-app/static/graphs/
-app/static/portfolio/
-app/static/screenshots/  # <-- Kalau screenshot hasil auto, bisa dikecualikan kalau perlu
-app/static/live_prediction_chart.png
+templates_backup/
+templates_backup.zip
 project_ready_for_railway.zip
+generated-icon.png
+
+# === Notebooks / Jupyter ===
+.ipynb_checkpoints/
+
+# === Celery / Queue ===
+celerybeat-schedule
+celerybeat.pid
+
+# === MyPy / Typing ===
+.mypy_cache/
+.pytype/
+.dmypy.json
+
+# === Others ===
+.pybuilder/
+target/
+.scrapy/
+docs/_build/
+.pyre/
+.pytest_cache/
+
+# === Project Specific Testing ===
+test_telegram.py
+test_*.py
+structure.txt

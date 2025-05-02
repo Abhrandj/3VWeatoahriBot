@@ -1,47 +1,44 @@
 # core/report_generator.py
 
-import os
-import pandas as pd
 from datetime import datetime
 from core.telegram import send_telegram_message
 
-PORTFOLIO_CSV = os.path.join(os.path.dirname(__file__), "..", "data", "portfolio_closed.csv")
+def generate_daily_report(portfolio):
+    """
+    Kirim laporan harian ke Telegram berdasarkan posisi yang sudah tertutup hari ini.
+    """
+    today = datetime.now().strftime('%Y-%m-%d')
+    closed = portfolio.get_closed()
 
+    # Filter posisi yang ditutup hari ini
+    trades_today = [
+        t for t in closed
+        if str(t.get("closed_at", "")).startswith(today)
+    ]
 
-def generate_daily_report():
-    if not os.path.exists(PORTFOLIO_CSV):
-        return "File portfolio_closed.csv tidak ditemukan."
-
-    try:
-        df = pd.read_csv(PORTFOLIO_CSV)
-        if df.empty:
-            return "Data histori kosong."
-
-        # Filter trade hari ini
-        today = datetime.now().date()
-        df['timestamp'] = pd.to_datetime(df['timestamp']).dt.date
-        daily_df = df[df['timestamp'] == today]
-
-        if daily_df.empty:
-            return "Tidak ada trade hari ini."
-
-        # Hitung metrik
-        total_trades = len(daily_df)
-        total_pnl = daily_df['pnl'].sum()
-        avg_roi = daily_df['roi_percent'].mean()
-
-        # Format pesan Telegram
-        message = (
-            f"📊 <b>Daily Report</b> - <code>{today}</code>\n"
-            f"———————————————\n"
-            f"🧾 Total Trades: <b>{total_trades}</b>\n"
-            f"💰 Total PnL: <b>${round(total_pnl, 2)}</b>\n"
-            f"📈 Avg ROI: <b>{round(avg_roi, 2)}%</b>\n"
-        )
-
-        # Kirim pesan
+    if not trades_today:
+        message = f"[DAILY REPORT] {today}\nNo trades closed today."
         send_telegram_message(message)
-        return "Laporan harian berhasil dikirim ke Telegram."
+        return message
 
-    except Exception as e:
-        return f"Terjadi error: {str(e)}"
+    # Hitung total ROI dan PnL
+    total_roi = sum(t.get("roi", 0) for t in trades_today)
+    total_pnl = sum(t.get("pnl", 0) for t in trades_today)
+    total_roi = round(total_roi, 2)
+    total_pnl = round(total_pnl, 2)
+
+    # Trade terbaik dan terburuk
+    best = max(trades_today, key=lambda t: t.get("roi", -999))
+    worst = min(trades_today, key=lambda t: t.get("roi", 999))
+
+    summary = (
+        f"[DAILY REPORT] {today}\n"
+        f"Closed Trades: {len(trades_today)}\n"
+        f"Total PnL: {total_pnl:.2f} USDT\n"
+        f"Total ROI: {total_roi:.2f}%\n"
+        f"Best: {best.get('symbol', '-')} {best.get('roi', 0):.2f}%\n"
+        f"Worst: {worst.get('symbol', '-')} {worst.get('roi', 0):.2f}%"
+    )
+
+    send_telegram_message(summary)
+    return "[Daily Report] Terkirim ke Telegram."

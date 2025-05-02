@@ -1,5 +1,3 @@
-# core/okx_sdk.py
-
 import time
 import hmac
 import base64
@@ -47,6 +45,7 @@ class OKXClient:
         except Exception as e:
             return {"error": str(e)}
 
+    # === MARKET DATA ===
     def get_kline(self, symbol, interval='1m', limit=100):
         return self._request("GET", "/api/v5/market/candles", params={
             "instId": symbol,
@@ -57,15 +56,45 @@ class OKXClient:
     def get_ticker(self, inst_id):
         return self._request("GET", "/api/v5/market/ticker", params={"instId": inst_id})
 
-    def place_order(self, inst_id, side, size, type="market"):
+    # === ACCOUNT INFO ===
+    def get_account_balance(self):
+        return self._request("GET", "/api/v5/account/balance")
+
+    # === REAL TRADING ORDER ===
+    def place_order(self, inst_id, side, size, type="market", reduce_only=False):
+        """
+        Place market/limit order
+        side: "buy" or "sell"
+        type: "market" or "limit"
+        reduce_only: True/False (for closing)
+        """
         body = {
             "instId": inst_id,
-            "tdMode": "cash",
+            "tdMode": "isolated",  # Futures isolated mode
             "side": side,
             "ordType": type,
             "sz": str(size)
         }
+        if reduce_only:
+            body["reduceOnly"] = True
         return self._request("POST", "/api/v5/trade/order", body=body)
 
-    def get_account_balance(self):
-        return self._request("GET", "/api/v5/account/balance")
+    # === PLACE TP/SL TRIGGER ORDER ===
+    def place_trigger_order(self, inst_id, side, trigger_price, order_type="market", size=0.001):
+        """
+        Place a TP/SL (trigger) order
+        side: "buy" or "sell"
+        trigger_price: price where order triggered
+        order_type: "market" or "limit"
+        """
+        body = {
+            "instId": inst_id,
+            "tdMode": "isolated",
+            "side": side,
+            "ordType": order_type,
+            "sz": str(size),
+            "triggerPx": str(trigger_price),
+            "triggerPxType": "last",  # based on last traded price
+            "posSide": "net"
+        }
+        return self._request("POST", "/api/v5/trade/order-algo", body=body)

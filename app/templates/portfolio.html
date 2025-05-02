@@ -1,17 +1,13 @@
 {% extends "base.html" %}
 {% block title %}Portfolio{% endblock %}
-
 {% block content %}
 <div class="container my-5">
-
-  <!-- === OPEN POSITIONS === -->
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h2 class="mb-0">Open Positions</h2>
     <a href="{{ url_for('portfolio.export_portfolio') }}" class="btn btn-outline-primary">
       <i class="bi bi-download me-1"></i> Export CSV
     </a>
   </div>
-
   {% if positions %}
     <div class="table-responsive">
       <table class="table table-striped table-sm align-middle text-center">
@@ -44,25 +40,19 @@
   {% else %}
     <div class="alert alert-secondary">No open positions available.</div>
   {% endif %}
-
-  <!-- === ROI CUMULATIVE CHART === -->
   <hr class="my-5">
   <div class="card shadow-sm mb-4">
     <div class="card-body text-center">
       <h5 class="card-title">Cumulative ROI Chart</h5>
-      <img src="{{ url_for('dashboard.graph_file', filename='cumulative_roi.png') }}"
-           alt="ROI Chart" class="img-fluid">
+      <img src="{{ url_for('dashboard.graph_file', filename='cumulative_roi.png') }}" alt="ROI Chart" class="img-fluid">
     </div>
   </div>
-
-  <!-- === CLOSED HISTORY === -->
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h2 class="mb-0">Closed Position History</h2>
     <a href="{{ url_for('portfolio.export_history') }}" class="btn btn-outline-secondary">
       <i class="bi bi-file-earmark-arrow-down me-1"></i> Export History
     </a>
   </div>
-
   {% if closed_positions %}
     <div class="table-responsive">
       <table class="table table-bordered table-sm table-striped align-middle text-center">
@@ -95,6 +85,5 @@
   {% else %}
     <div class="alert alert-light">No closed history available.</div>
   {% endif %}
-
 </div>
 {% endblock %}

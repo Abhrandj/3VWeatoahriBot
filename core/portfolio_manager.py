@@ -55,7 +55,7 @@ class Portfolio:
     def get_closed(self):
         return self.closed
 
-    def export_to_csv(self, path="flask_app/static/portfolio.csv", current_prices=None):
+    def export_to_csv(self, path="static/portfolio.csv", current_prices=None):
         try:
             with open(path, mode='w', newline='') as file:
                 writer = csv.writer(file)
@@ -78,7 +78,7 @@ class Portfolio:
             print(f"[Portfolio CSV] Export gagal: {e}")
             return None
 
-    def export_history_to_csv(self, path="flask_app/static/portfolio_history.csv"):
+    def export_history_to_csv(self, path="static/portfolio_history.csv"):
         try:
             with open(path, mode='w', newline='') as file:
                 writer = csv.writer(file)

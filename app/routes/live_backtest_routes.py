@@ -1,22 +1,18 @@
 # app/routes/live_backtest_routes.py
 
 import os
-import time
 import pandas as pd
-import matplotlib.pyplot as plt
 from datetime import datetime
 from flask import Blueprint, render_template, request, session, redirect, url_for
+import plotly.graph_objs as go
 
 from core.bot_instance import bot
 from core.ai_predictor import predict_next_close_linear
 from core.okx_trader import execute_trade
 from core.telegram import send_telegram_message, send_telegram_photo
+from core.graph_generator import generate_mini_chart  # untuk mini chart image
 
 live_backtest_bp = Blueprint("live_backtest", __name__)
-
-STATIC_FOLDER = os.path.join(os.path.dirname(__file__), "..", "static")
-GRAPH_PATH = os.path.join(STATIC_FOLDER, "live_prediction_chart.png")
-
 
 @live_backtest_bp.route("/", methods=["GET", "POST"])
 def live_backtest():
@@ -31,6 +27,7 @@ def live_backtest():
     result = []
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     is_new_prediction = False
+    plot_html = None
 
     if data is not None and len(data) >= 10:
         df = pd.DataFrame(data, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
@@ -61,22 +58,25 @@ def live_backtest():
                 "is_new": is_new_prediction
             }
 
-            # === Generate Chart ===
-            plt.figure(figsize=(10, 4))
-            plt.plot(df['datetime'][-30:], df['close'][-30:], marker='o', label="Actual Price")
-            plt.axhline(y=entry, color='gray', linestyle='--', label=f"Entry: {entry}")
-            plt.axhline(y=predicted, color='orange', linestyle='--', label=f"Predicted: {predicted}")
-            plt.axhline(y=sl, color='red', linestyle=':', label=f"SL: {sl}")
-            plt.axhline(y=tp, color='green', linestyle=':', label=f"TP: {tp}")
-            plt.xticks(rotation=45)
-            plt.title(f"Live Prediction: {selected_pair} ({interval})")
-            plt.xlabel("Datetime")
-            plt.ylabel("Price")
-            plt.legend()
-            plt.tight_layout()
-            os.makedirs(os.path.dirname(GRAPH_PATH), exist_ok=True)
-            plt.savefig(GRAPH_PATH)
-            plt.close()
+            # === Generate Interaktif Chart ===
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(x=df['datetime'], y=df['close'], mode='lines+markers', name='Actual Price'))
+            fig.add_hline(y=entry, line_dash='dash', line_color='gray',
+                          annotation_text=f"Entry: {entry}", annotation_position="top left")
+            fig.add_hline(y=predicted, line_dash='dash', line_color='orange',
+                          annotation_text=f"Predicted: {predicted}", annotation_position="top left")
+            fig.add_hline(y=sl, line_dash='dot', line_color='red',
+                          annotation_text=f"SL: {sl}", annotation_position="bottom left")
+            fig.add_hline(y=tp, line_dash='dot', line_color='green',
+                          annotation_text=f"TP: {tp}", annotation_position="bottom left")
+            fig.update_layout(
+                title=f"Live Prediction: {selected_pair}",
+                xaxis_title="Datetime",
+                yaxis_title="Price",
+                template="plotly_white",
+                height=400
+            )
+            plot_html = fig.to_html(full_html=False)
 
             # === Kirim Telegram jika Prediksi Baru ===
             if is_new_prediction:
@@ -88,18 +88,28 @@ def live_backtest():
                     f"Entry: {entry}\n"
                     f"SL: {sl} | TP: {tp}"
                 )
-                send_telegram_message(text)
-                send_telegram_photo(GRAPH_PATH, caption=text)
+                chart_path = generate_mini_chart(selected_pair)
+                if chart_path and os.path.exists(chart_path):
+                    send_telegram_photo(chart_path, caption=text)
+                else:
+                    send_telegram_message(text)
 
-        # === Load tabel hasil ===
-        result = df[['datetime', 'open', 'high', 'low', 'close', 'volume']].iloc[::-1].head(20).to_dict(orient='records')
+                # === Auto Trade jika aktif ===
+                if session.get("auto_trade"):
+                    execute_trade(selected_pair, signal, entry, sl, tp)
+                    send_telegram_message(f"[AUTO TRADE] {selected_pair} | {signal} @ {entry}")
+
+        # === Tabel data terakhir ===
+        result = df[['datetime', 'open', 'high', 'low', 'close', 'volume']]\
+                    .iloc[::-1].head(20).to_dict(orient='records')
 
     return render_template(
         "live_backtest.html",
         prediction=prediction,
         result=result,
         selected_pair=selected_pair,
-        current_time=current_time
+        current_time=current_time,
+        plot_html=plot_html
     )
 
 

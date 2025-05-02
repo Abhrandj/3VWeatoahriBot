@@ -12,14 +12,14 @@ def login():
         password = request.form.get("password")
         if authenticate(username, password):
             session["user"] = username
-            flash("Login successful!", "success")
-            return redirect(url_for("dashboard.dashboard"))  # ⟵ langsung ke dashboard
+            flash("Login berhasil!", "success")
+            return redirect(url_for("home_bp.home"))  # Setelah login, ke landing/home
         else:
-            flash("Invalid credentials!", "danger")
+            flash("Username atau password salah!", "danger")
     return render_template("login.html")
 
 @auth_bp.route("/logout")
 def logout():
     session.pop("user", None)
-    flash("Logged out successfully!", "info")
-    return redirect(url_for("auth.login"))
+    flash("Anda telah logout.", "info")
+    return redirect(url_for("home_bp.home"))  # Redirect ke landing page setelah logout

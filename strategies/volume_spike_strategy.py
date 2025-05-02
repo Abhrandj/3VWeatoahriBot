@@ -1,12 +1,78 @@
-def volume_spike_strategy(df):
-  tags = []
-  volume = df['volume'].iloc[-1]
-  prev_volume = df['volume'].iloc[-5:-1].mean()
-  rsi = df['rsi'].iloc[-1]
+import logging
+import pandas as pd
+from typing import Dict, List, Callable
 
-  if volume > prev_volume * 2:
-      if df['close'].iloc[-1] > df['open'].iloc[-1] and rsi < 50:
-          tags.append("VOL_SPIKE_BUY")
-      elif df['close'].iloc[-1] < df['open'].iloc[-1] and rsi > 50:
-          tags.append("VOL_SPIKE_SELL")
-  return tags
+class Volume_SpikeStrategy:
+    """Strategi Volume Spike dengan konfirmasi tren, RSI, dan MACD."""
+
+    def __init__(
+        self,
+        symbols: List[str],
+        get_data_func: Callable[[str], pd.DataFrame],
+        volume_multiplier: float = 1.5,
+        rsi_oversold: float = 35,
+        rsi_overbought: float = 65
+    ):
+        self.symbols = symbols
+        self.get_data = get_data_func
+        self.volume_multiplier = volume_multiplier
+        self.rsi_oversold = rsi_oversold
+        self.rsi_overbought = rsi_overbought
+        self.logger = logging.getLogger(__name__)
+
+    def check_signals(self) -> Dict[str, Dict[str, str]]:
+        signals = {}
+
+        for symbol in self.symbols:
+            try:
+                df = self.get_data(symbol)
+                if df is None or len(df) < 50:
+                    self.logger.warning(f"Data tidak cukup untuk {symbol}.")
+                    continue
+
+                required_columns = ['close', 'volume', 'ema200', 'rsi', 'macd_histogram']
+                if not all(col in df.columns for col in required_columns):
+                    self.logger.error(f"Indikator tidak lengkap untuk {symbol}.")
+                    continue
+
+                price = df['close'].iloc[-1]
+                volume = df['volume'].iloc[-1]
+                avg_volume = df['volume'].rolling(20).mean().iloc[-1]
+                ema200 = df['ema200'].iloc[-1]
+                rsi = df['rsi'].iloc[-1]
+                macd_hist = df['macd_histogram'].iloc[-1]
+
+                trend_up = price > ema200
+                trend_down = price < ema200
+
+                volume_spike = volume > self.volume_multiplier * avg_volume
+
+                buy_condition = (
+                    volume_spike and
+                    trend_up and
+                    rsi < self.rsi_oversold and
+                    macd_hist > 0
+                )
+
+                sell_condition = (
+                    volume_spike and
+                    trend_down and
+                    rsi > self.rsi_overbought and
+                    macd_hist < 0
+                )
+
+                if buy_condition:
+                    signals[symbol] = {
+                        "strategy_signal": "BUY",
+                        "tags": ["Volume Spike", "Trend Up", "RSI Oversold", "MACD Confirm"]
+                    }
+                elif sell_condition:
+                    signals[symbol] = {
+                        "strategy_signal": "SELL",
+                        "tags": ["Volume Spike", "Trend Down", "RSI Overbought", "MACD Confirm"]
+                    }
+
+            except Exception as e:
+                self.logger.error(f"Error {symbol}: {str(e)}")
+
+        return signals

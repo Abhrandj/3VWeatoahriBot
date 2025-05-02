@@ -1,4 +1,4 @@
-# flask_app/routes/report_routes.py
+# routes/report_routes.py
 
 from flask import Blueprint, render_template
 from core.report_generator import generate_daily_report

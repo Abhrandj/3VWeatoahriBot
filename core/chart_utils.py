@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from core.utils import fetch_ohlcv
 
-def generate_mini_chart(symbol, save_path="flask_app/static/mini"):
+def generate_mini_chart(symbol, save_path="static/mini"):
     try:
         os.makedirs(save_path, exist_ok=True)
 

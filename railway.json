@@ -7,7 +7,16 @@
     },
     "command": "pip install -r requirements.txt"
   },
-  "start": {
-    "command": "python3 main.py"
+  "services": {
+    "web": {
+      "start": {
+        "command": "gunicorn -b 0.0.0.0:$PORT main:app"
+      }
+    },
+    "botloop": {
+      "start": {
+        "command": "python run_loop.py"
+      }
+    }
   }
 }

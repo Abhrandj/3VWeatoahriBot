@@ -1,56 +1,51 @@
 {% extends "base.html" %}
-
 {% block content %}
 <div class="container mt-4">
-    <h2 class="mb-4">Backtest</h2>
-
-    {% if error %}
-    <div class="alert alert-danger">{{ error }}</div>
-    {% endif %}
-
-    <div class="card mb-4">
-        <div class="card-body">
-            <h5 class="card-title">Upload CSV untuk Backtest</h5>
-            <form method="POST" enctype="multipart/form-data">
-                <div class="mb-3">
-                    <input type="file" class="form-control" name="csv_file" accept=".csv" required>
-                </div>
-                <button type="submit" class="btn btn-primary">Upload & Backtest</button>
-            </form>
+  <h2 class="mb-4">Backtest</h2>
+  {% if error %}
+  <div class="alert alert-danger">{{ error }}</div>
+  {% endif %}
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5 class="card-title">Upload CSV untuk Backtest</h5>
+      <form method="POST" enctype="multipart/form-data">
+        <div class="mb-3">
+          <input type="file" class="form-control" name="csv_file" accept=".csv" required>
         </div>
+        <button type="submit" class="btn btn-primary">Upload & Backtest</button>
+      </form>
     </div>
-
-    <div class="card mb-4">
-        <div class="card-body">
-            <h5 class="card-title">Download Data dan Backtest</h5>
-            <form method="POST">
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <input type="text" class="form-control" name="symbol" placeholder="Contoh: BTC/USDT" required>
-                    </div>
-                    <div class="col-md-3">
-                        <input type="text" class="form-control" name="bar" placeholder="Contoh: 1h" required>
-                    </div>
-                    <div class="col-md-3">
-                        <input type="number" class="form-control" name="total" placeholder="Jumlah Data" value="1000">
-                    </div>
-                    <div class="col-md-2 d-grid">
-                        <button type="submit" class="btn btn-success">Fetch & Backtest</button>
-                    </div>
-                </div>
-            </form>
+  </div>
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5 class="card-title">Download Data dan Backtest</h5>
+      <form method="POST">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <input type="text" class="form-control" name="symbol" placeholder="Contoh: BTC/USDT" required>
+          </div>
+          <div class="col-md-3">
+            <input type="text" class="form-control" name="bar" placeholder="Contoh: 1h" required>
+          </div>
+          <div class="col-md-3">
+            <input type="number" class="form-control" name="total" placeholder="Jumlah Data" value="1000">
+          </div>
+          <div class="col-md-2 d-grid">
+            <button type="submit" class="btn btn-success">Fetch & Backtest</button>
+          </div>
         </div>
+      </form>
     </div>
-
-    {% if result %}
-    <div class="card mt-4">
-        <div class="card-body">
-            <h5 class="card-title">Hasil Backtest</h5>
-            <p><strong>ROI:</strong> {{ result.roi }}%</p>
-            <p><strong>Profit:</strong> {{ result.profit }}</p>
-            <p><strong>Number of Trades:</strong> {{ result.num_trades }}</p>
-        </div>
+  </div>
+  {% if result %}
+  <div class="card mt-4">
+    <div class="card-body">
+      <h5 class="card-title">Hasil Backtest</h5>
+      <p><strong>ROI:</strong> {{ result.roi }}%</p>
+      <p><strong>Profit:</strong> {{ result.profit }}</p>
+      <p><strong>Number of Trades:</strong> {{ result.num_trades }}</p>
     </div>
-    {% endif %}
+  </div>
+  {% endif %}
 </div>
 {% endblock %}

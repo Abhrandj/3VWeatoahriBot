@@ -5,8 +5,8 @@ from core.okx_sdk import OKXClient
 from core.risk_management import RiskManager
 from core.utils import fetch_ohlcv
 from core.indicators import calculate_indicators
-from core.ai_predictor import predict_next_close_linear,predict_next_close_prophet
-from strategies import run_all_strategies  # Import strategi terpusat
+from core.ai_predictor import predict_next_close_linear, predict_next_close_prophet
+from core.strategy_engine import StrategyEngine
 
 class TradingEngine:
     def __init__(self, api_key, api_secret, passphrase, symbols=None):
@@ -15,6 +15,37 @@ class TradingEngine:
         self.last_price = {}
         self.position = {}
         self.risk_manager = RiskManager()
+        self.ai_predictions = {}
+        self.cached_df = {}
+
+    def get_data(self, symbol):
+        if symbol in self.cached_df:
+            return self.cached_df[symbol]
+
+        df = fetch_ohlcv(symbol, interval='1m', limit=100)
+        if df is None or len(df) < 50:
+            print(f"[ERROR] Data terlalu sedikit untuk {symbol}")
+            return None
+
+        df = pd.DataFrame(df, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+        df = calculate_indicators(df)
+
+        required_cols = ['ema_20', 'ema_50', 'ema200', 'ma_200', 'rsi',
+                         'upper_band', 'lower_band', 'macd_histogram']
+        missing = [col for col in required_cols if col not in df.columns]
+        if missing:
+            print(f"[ERROR] Indikator tidak lengkap untuk {symbol}. Missing: {missing}")
+            return None
+
+        print(f"[OK] {symbol} data lengkap. Kolom: {df.columns.tolist()[-8:]}")
+        self.cached_df[symbol] = df
+        return df
+
+    def get_ohlcv(self, symbol, interval='1m', limit=100):
+        return fetch_ohlcv(symbol, interval, limit)
+
+    def get_ai_signal(self, symbol):
+        return self.ai_predictions.get(symbol, "N/A")
 
     def update_prices(self):
         for symbol in self.symbols:
@@ -26,19 +57,10 @@ class TradingEngine:
                 except (KeyError, ValueError) as e:
                     print(f"Gagal parsing harga untuk {symbol}: {e}")
 
-    def get_data(self, symbol):
-        df = fetch_ohlcv(symbol, interval='1m', limit=100)
-        if df is None or len(df) < 50:
-            return None
-        df = pd.DataFrame(df, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
-        df = calculate_indicators(df)
-        return df
-
-    def get_ohlcv(self, symbol, interval='1m', limit=100):
-        return fetch_ohlcv(symbol, interval, limit)
-
     def evaluate_signal(self):
         self.update_prices()
+        self.ai_predictions = {}
+        self.cached_df = {}
         signals = {}
 
         for symbol in self.symbols:
@@ -53,25 +75,22 @@ class TradingEngine:
                 continue
 
             current_price = df['close'].iloc[-1]
-
             prophet_pred = predict_next_close_prophet(df)
-            ai_signal = None
-            if prophet_pred:
-                ai_signal = "BUY" if current_price < prophet_pred else "SELL"
+            ai_signal = "BUY" if prophet_pred and current_price < prophet_pred else "SELL"
+            self.ai_predictions[symbol] = ai_signal
 
-            tags = run_all_strategies(df, ai_signal)  # Jalankan semua strategi sebagai plugin
+        self.strategy_engine = StrategyEngine(
+            symbols=self.symbols,
+            get_data=lambda symbol: self.cached_df.get(symbol),
+            get_ai_signal=self.get_ai_signal
+        )
+        strategy_signals = self.strategy_engine.evaluate_all()
 
-            strategy_signal = "HOLD"
-            if "EMA_BB_BUY" in tags or "VOL_SPIKE_BUY" in tags:
-                strategy_signal = "BUY"
-            elif "EMA_BB_SELL" in tags or "VOL_SPIKE_SELL" in tags:
-                strategy_signal = "SELL"
-
-            self.last_price[symbol] = current_price
+        for symbol in self.symbols:
             signals[symbol] = {
-                "strategy_signal": strategy_signal,
-                "ai_signal": ai_signal or "N/A",
-                "tags": tags
+                "strategy_signal": strategy_signals.get(symbol, {}).get("strategy_signal", "HOLD"),
+                "ai_signal": self.ai_predictions.get(symbol, "N/A"),
+                "tags": strategy_signals.get(symbol, {}).get("tags", [])
             }
 
         return signals
