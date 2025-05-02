@@ -43,6 +43,19 @@ class BotInstance:
             cls._instance = cls()
         return cls._instance
 
+    def get_price(self, pair):
+        price = self.engine.last_price.get(pair)
+        if price:
+            return price
+        try:
+            ticker = self.engine.okx.get_ticker(pair)
+            price = float(ticker.get("last", 0))
+            self.engine.last_price[pair] = price
+            return price
+        except Exception as e:
+            print(f"[ERROR] Failed to fetch real-time price for {pair}: {e}")
+            return None
+
     def run(self, notify=True):
         self.ai_signals = {}
 
@@ -60,16 +73,15 @@ class BotInstance:
         combined_signals = {}
 
         for symbol, signal in signals.items():
-            current_price = self.engine.last_price.get(symbol)
+            current_price = self.get_price(symbol)
             if current_price is None:
                 continue
 
             action = signal.get("strategy_signal", "HOLD")
             tags = signal.get("tags", [])
 
-            if action in ["BUY", "SELL"]:
-                if symbol not in self.portfolio.get_all():
-                    self.portfolio.open_position(symbol, action, current_price)
+            if action in ["BUY", "SELL"] and symbol not in self.portfolio.get_all():
+                self.portfolio.open_position(symbol, action, current_price)
 
             self.portfolio.update_trailing(symbol, current_price)
 
@@ -80,16 +92,11 @@ class BotInstance:
                     side = pos["side"]
                     roi = (current_price - entry) / entry * 100 if side == "BUY" else (entry - current_price) / entry * 100
                     if notify:
-                        send_telegram_message(
-                            f"Trailing Stop Triggered: {symbol}\nExit @ {current_price:.2f}\nROI: {roi:.2f}%"
-                        )
+                        send_telegram_message(f"Trailing Stop Triggered: {symbol}\nExit @ {current_price:.2f}\nROI: {roi:.2f}%")
                 self.portfolio.close_position(symbol)
 
             if notify:
-                text = (
-                    f"{symbol}\nStrategy: {action}\nAI: {self.ai_signals.get(symbol, '-')}\n"
-                    f"Price: {current_price:.2f}\nTags: {', '.join(tags)}"
-                )
+                text = f"{symbol}\nStrategy: {action}\nAI: {self.ai_signals.get(symbol, '-')}\nPrice: {current_price:.2f}\nTags: {', '.join(tags)}"
                 chart = generate_mini_chart(symbol)
                 if chart and os.path.exists(chart):
                     send_telegram_photo(chart, caption=text)
@@ -112,7 +119,7 @@ class BotInstance:
         return qty
 
     def open_buy(self, pair, balance=100, risk_pct=0.005, leverage=10):
-        price = self.engine.last_price.get(pair)
+        price = self.get_price(pair)
         if not price:
             send_telegram_message(f"[ERROR] Price not available for {pair}")
             return
@@ -131,7 +138,7 @@ class BotInstance:
             send_telegram_message(f"[TEST BUY] {pair} | Qty: {qty} | Price: {price}")
 
     def open_sell(self, pair, balance=100, risk_pct=0.005, leverage=10):
-        price = self.engine.last_price.get(pair)
+        price = self.get_price(pair)
         if not price:
             send_telegram_message(f"[ERROR] Price not available for {pair}")
             return
@@ -154,9 +161,14 @@ class BotInstance:
         if not pos:
             send_telegram_message(f"[CLOSE FAILED] No open position for {pair}")
             return
+
+        price = self.get_price(pair)
+        if not price:
+            send_telegram_message(f"[ERROR] Cannot close, price not available for {pair}")
+            return
+
         self.cancel_all_triggers(pair)
         side = "sell" if pos["side"] == "BUY" else "buy"
-        price = self.engine.last_price.get(pair)
         qty = round(pos.get("entry_amount", 0.001), 4)
 
         if is_live_mode():
@@ -201,7 +213,7 @@ class BotInstance:
 
     def manage_trailing(self):
         for pair, data in self.trailing_data.items():
-            current_price = self.engine.last_price.get(pair)
+            current_price = self.get_price(pair)
             if not current_price:
                 continue
 
@@ -225,5 +237,5 @@ class BotInstance:
                     trigger_price = best * 1.003
                     send_telegram_message(f"[TRAILING SELL] {pair} | New SL: {trigger_price:.2f}")
 
-# Singleton
+# Singleton instance
 bot = BotInstance.get_instance()
