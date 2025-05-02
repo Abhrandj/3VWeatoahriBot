@@ -1,14 +1,15 @@
-# core/utils.py
-
 import os
 import csv
 import pandas as pd
 import matplotlib.pyplot as plt
+from flask import session
 from core.okx_sdk import OKXClient as CustomOKX
 
 # === 0. Cek Mode Bot ===
 def is_live_mode():
-    return os.getenv("BOT_MODE", "TEST").upper() == "LIVE"
+    override = session.get("bot_mode_override")
+    mode = override or os.getenv("BOT_MODE", "TEST")
+    return mode.upper() == "LIVE"
 
 # === 1. Fetch OHLCV dari file lokal atau OKX ===
 def fetch_ohlcv(symbol, interval='1m', limit=100):

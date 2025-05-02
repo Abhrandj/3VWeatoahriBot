@@ -1,5 +1,3 @@
-# app/routes/dashboard_routes.py
-
 import os
 from datetime import datetime
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, send_from_directory
@@ -47,7 +45,7 @@ def dashboard():
     generate_roi_chart(bot.portfolio.get_closed())
 
     last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    bot_mode = "LIVE" if is_live_mode() else "TEST"
+    bot_mode = session.get("bot_mode_override", "LIVE" if is_live_mode() else "TEST")
 
     return render_template(
         "dashboard.html",
@@ -75,6 +73,13 @@ def send_daily_report():
 def toggle_auto_trade():
     session["auto_trade"] = request.form.get("auto_trade") == "1"
     flash(f"Auto Trade {'Aktif' if session['auto_trade'] else 'Nonaktif'}", "info")
+    return redirect(url_for("dashboard.dashboard"))
+
+@dashboard_bp.route("/toggle_mode", methods=["POST"])
+def toggle_bot_mode():
+    new_mode = request.form.get("mode", "TEST").upper()
+    session["bot_mode_override"] = new_mode
+    flash(f"Bot mode changed to {new_mode}", "info")
     return redirect(url_for("dashboard.dashboard"))
 
 @dashboard_bp.route("/graphs/<path:filename>")
